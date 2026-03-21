@@ -8,7 +8,7 @@ ALLOWED_TABLES = {
     "AlertInfo": {},  # No fields specified in tools
     "AlertEvidence": {},  # No fields specified in tools
     "DeviceFileEvents": {"TimeGenerated","ActionType","DeviceName","FileName","FolderPath","InitiatingProcessAccountName","SHA256"},
-    "DeviceRegistryEvents": {},  # No fields specified in tools
+    "DeviceRegistryEvents": {"TimeGenerated", "ActionType", "DeviceName", "RegistryKey", "RegistryValueName", "RegistryValueData", "InitiatingProcessAccountName", "InitiatingProcessFileName"},  # No fields specified in tools
     "AzureNetworkAnalytics_CL": { "TimeGenerated", "FlowType_s", "SrcPublicIPs_s", "DestIP_s", "DestPort_d", "VM_s", "AllowedInFlows_d", "AllowedOutFlows_d", "DeniedInFlows_d", "DeniedOutFlows_d" },
     "AzureActivity": {"TimeGenerated", "OperationNameValue", "ActivityStatusValue", "ResourceGroup", "Caller", "CallerIpAddress", "Category" },
     "SigninLogs": {"TimeGenerated", "UserPrincipalName", "OperationName", "Category", "ResultSignature", "ResultDescription", "AppDisplayName", "IPAddress", "LocationDetails" },

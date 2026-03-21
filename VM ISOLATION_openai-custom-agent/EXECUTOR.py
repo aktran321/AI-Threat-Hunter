@@ -149,6 +149,29 @@ def get_query_context(openai_client, user_message, model):
 
     return args  # or return function_call, args
 
+def query_log_analytics_raw(log_analytics_client,workspace_id,user_query):
+    response = log_analytics_client.query_workspace(
+            workspace_id=workspace_id,
+            query=user_query,
+        )
+    if len(response.tables[0].rows) == 0:
+        print(f"{Fore.WHITE}No data returned from Log Analytics.")
+        return { "records": "", "count": 0 }
+    
+    # Extract the response of Azure API
+    table = response.tables[0]
+
+    # TODO: Handle if returns 0 events
+    record_count = len(response.tables[0].rows)
+
+    # Extract columns and rows using dot notation
+    columns = table.columns  # Already a list of strings
+    rows = table.rows        # List of row data
+
+    df = pd.DataFrame(rows, columns=columns)
+    records = df.to_csv(index=False)
+
+    return { "records": records, "count": record_count } 
 
 def query_log_analytics(log_analytics_client, workspace_id, timerange_hours, table_name, device_name, fields, caller, user_principal_name, start_time, end_time):
     if start_time and end_time:
@@ -162,32 +185,34 @@ def query_log_analytics(log_analytics_client, workspace_id, timerange_hours, tab
 
     if table_name == "AzureNetworkAnalytics_CL":
         user_query = f'''{table_name}
-| where FlowType_s == "MaliciousFlow"
-| project {fields}'''
+        | where FlowType_s == "MaliciousFlow"
+        | project {fields}'''
         
     elif table_name == "AzureActivity":
         user_query = f'''{table_name}
-| where isnotempty(Caller) and Caller !in ("d37a587a-4ef3-464f-a288-445e60ed248c","ef669d55-9245-4118-8ba7-f78e3e7d0212","3e4fe3d2-24ff-4972-92b3-35518d6e6462")
-| where Caller startswith "{caller}"
-| project {fields}'''
+        | where isnotempty(Caller) and Caller !in ("d37a587a-4ef3-464f-a288-445e60ed248c","ef669d55-9245-4118-8ba7-f78e3e7d0212","3e4fe3d2-24ff-4972-92b3-35518d6e6462")
+        | where Caller startswith "{caller}"
+        | project {fields}'''
         
     elif table_name == "SigninLogs":
         user_query = f'''{table_name}
-{time_filter}
-| where UserPrincipalName startswith "{user_principal_name}"
-| project {fields}'''
+        {time_filter}
+        | where UserPrincipalName startswith "{user_principal_name}"
+        | project {fields}'''
         
     else:
         user_query = f'''{table_name}
-{time_filter}
-| where DeviceName startswith "{device_name}"
-| project {fields}'''
+        {time_filter}
+        | where DeviceName startswith "{device_name}"
+        | project {fields}'''
         
     print(f"{Fore.LIGHTGREEN_EX}Constructed KQL Query:")
     print(f"{Fore.WHITE}{user_query}\n")
 
     print(f"{Fore.LIGHTGREEN_EX}Querying Log Analytics Workspace ID: '{workspace_id}'...")
-
+# ================================
+# Query has been created, now passing the workspace id and query into Azure log analytics
+# ================================
     if start_time or end_time:
         response = log_analytics_client.query_workspace(
             workspace_id=workspace_id,
@@ -205,7 +230,7 @@ def query_log_analytics(log_analytics_client, workspace_id, timerange_hours, tab
         print(f"{Fore.WHITE}No data returned from Log Analytics.")
         return { "records": "", "count": 0 }
     
-    # Extract the table
+    # Extract the response of Azure API
     table = response.tables[0]
 
     # TODO: Handle if returns 0 events

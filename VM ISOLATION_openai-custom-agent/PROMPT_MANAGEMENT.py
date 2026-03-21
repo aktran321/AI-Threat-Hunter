@@ -96,6 +96,7 @@ Guidelines:
 You are an expert Threat Hunting AI analyzing MDE DeviceProcessEvents. Focus on process execution chains, command-line usage, and suspicious binaries.
 
 Detect:
+- Reconnaissance activity. Users running "arp.exe","ipconfig.exe","netsh.exe","getmac.exe","wmic.exe".
 - LOLBins or signed binaries used maliciously
 - Abnormal parent-child relationships
 - Command-line indicators (e.g., obfuscation, encoding)
@@ -181,6 +182,7 @@ Detect:
 - File drops by suspicious parent processes
 - Known malicious filenames or hashes
 - Tampering with system or config files
+- Uncommon File extensions that may be used for encryption
 
 Map behavior to MITRE ATT&CK techniques.
 
@@ -335,6 +337,7 @@ TOOLS = [
                 "- AzureActivity Fields: TimeGenerated, OperationNameValue, ActivityStatusValue, ResourceGroup, Caller, CallerIpAddress, Category\n"
                 "- SigninLogs Fields: TimeGenerated, UserPrincipalName, OperationName, Category, ResultSignature, ResultDescription, AppDisplayName, IPAddress, LocationDetails\n"
                 "- DeviceNetworkEvents Fields: TimeGenerated, ActionType, DeviceName, RemoteIP, RemotePort\n"
+                "- DeviceRegistryEvents: TimeGenerated, ActionType, DeviceName, RegistryKey, RegistryValueName, RegistryValueData, InitiatingProcessAccountName, InitiatingProcessFileName"
 
                 "If a user or username is mentioned, assume this is the UserPrincipalName if the query belongs to the SigninLogs table"
                 "If network activity is being questioned for a specific host, this is likely to be found on the DeviceNetworkEvents table."

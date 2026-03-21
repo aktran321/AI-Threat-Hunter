@@ -30,6 +30,7 @@ model = MODEL_MANAGEMENT.DEFAULT_MODEL
 # Get the message from the user (What do you wan to hunt for?)
 user_message = PROMPT_MANAGEMENT.get_user_message() #TODO: Remove comment
 # Example: I'm worried that windows-target-1 might have been maliciously logged into in the last few days
+# Example: Give me the logons for azuki-sl start time 11-19-2025 and end time 11-20-2025
 
 # return an object that describes the user's request as well as where and how the agent has decided to search
 unformatted_query_context = EXECUTOR.get_query_context(openai_client, user_message, model=model)
@@ -113,6 +114,11 @@ input(f"Press {Fore.LIGHTGREEN_EX}[Enter]{Fore.WHITE} or {Fore.LIGHTGREEN_EX}[Re
 
 # Display the threat hunt analysis results.
 UTILITIES.display_threats(threat_list=hunt_results['findings'])
+
+
+# ==================================
+# VM ISOLATION 
+# ==================================
 
 token = EXECUTOR.get_bearer_token()
 
