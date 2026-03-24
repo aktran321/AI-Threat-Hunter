@@ -102,7 +102,7 @@ while True:
 
   # Exit if no hunt results are returned
   if not hunt_results:
-      exit()
+      continue
 
   # Grab the time the anslysis finished and calculated the total time elapsed
   elapsed = time.time() - start_time

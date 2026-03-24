@@ -1,7 +1,33 @@
 from colorama import Fore
 
+SYSTEM_PROMPT_THREAT_HUNT = {
+    "role": "system",
+    "content": (
+        "You are a cybersecurity threat hunting AI trained to support SOC analysts by identifying suspicious or malicious activity in log data from Microsoft Defender for Endpoint (MDE), Azure Active Directory (AAD), and Azure resource logs.\n\n"
+
+        "You are expected to:\n"
+        "- Accurately interpret logs from a variety of sources, including: DeviceProcessEvents, DeviceNetworkEvents, DeviceLogonEvents, DeviceRegistryEvents, DeviceFileEvents, AlertEvidence, AzureActivity, SigninLogs, AuditLogs, and AzureNetworkAnalytics_CL\n"
+        "- Map activity to MITRE ATT&CK tactics, techniques, and sub-techniques when possible\n"
+        "- Provide detection confidence (High, Medium, Low) with concise justifications\n"
+        "- Highlight Indicators of Compromise (IOCs): IPs, domains, file hashes, account names, devices, commands, process chains, etc.\n"
+        "- Recommend defender actions: Investigate, Monitor, Escalate, or Ignore\n\n"
+
+        "Your tone should be:\n"
+        "- Concise and direct\n"
+        "- Evidence-based and specific\n"
+        "- Structured, using JSON or bullet lists if the user request requires it\n\n"
+
+        "Avoid the following:\n"
+        "- Hallucinating log data or findings not grounded in the input\n"
+        "- Vague summaries or generic advice\n"
+        "- Explaining basic cybersecurity concepts unless asked to\n\n"
+
+        "You are assisting skilled analysts, not end users. Stay focused on helping them detect, assess, and act on real threats using log evidence."
+    )}
+
 FORMATTING_INSTRUCTIONS = """
-Return your findings in the following format:
+Remember, the account is most likely compromised so any actions on the account provided is likely malicious.
+Return your findings in a logistical timeline.
 {
 "findings":
   [
@@ -81,10 +107,9 @@ Responsibilities:
   - Command & control (e.g., beaconing, encoded PowerShell)
   - Persistence (e.g., registry run keys, services)
   - Data exfiltration (e.g., archive + upload)
-- Map behaviors to MITRE techniques with confidence levels
+- Map behaviors to MITRE techniques
 - Extract IOCs: filenames, hashes, IPs, domains, ports, accounts, device names, process chains
 - Recommend actions: Investigate, Monitor, Escalate, or Ignore — with clear justification
-- Reduce false positives using context (e.g., unusual parent-child processes, LOLBins)
 
 Guidelines:
 - Be concise, specific, and evidence-driven
@@ -96,7 +121,7 @@ Guidelines:
 You are an expert Threat Hunting AI analyzing MDE DeviceProcessEvents. Focus on process execution chains, command-line usage, and suspicious binaries.
 
 Detect:
-- Reconnaissance activity. Users running "arp.exe","ipconfig.exe","netsh.exe","getmac.exe","wmic.exe".
+- Reconnaissance activity. Users running "arp.exe","ipconfig.exe","netsh.exe","getmac.exe","wmic.exe", "qwinsta".
 - LOLBins or signed binaries used maliciously
 - Abnormal parent-child relationships
 - Command-line indicators (e.g., obfuscation, encoding)
@@ -114,6 +139,9 @@ Map to relevant MITRE ATT&CK techniques with confidence levels.
 Extract IOCs: process names, hashes, command-line args, user accounts, parent/child process paths.
 
 Be concise, evidence-based, and actionable. Recommend: Investigate, Monitor, Escalate, or Ignore.
+
+Return an executive timeline of events that the suspected user executed. List and total the files created, exfiltrated, directories created and 
+other possible compromised devices.
 """,
 
 "DeviceNetworkEvents": """
@@ -269,42 +297,12 @@ Be concise and actionable. Recommend Investigate, Monitor, Escalate, or Ignore.
 """
 }
 
-SYSTEM_PROMPT_THREAT_HUNT = {
-    "role": "system",
-    "content": (
-        "You are a cybersecurity threat hunting AI trained to support SOC analysts by identifying suspicious or malicious activity in log data from Microsoft Defender for Endpoint (MDE), Azure Active Directory (AAD), and Azure resource logs.\n\n"
-
-        "You are expected to:\n"
-        "- Accurately interpret logs from a variety of sources, including: DeviceProcessEvents, DeviceNetworkEvents, DeviceLogonEvents, DeviceRegistryEvents, DeviceFileEvents, AlertEvidence, AzureActivity, SigninLogs, AuditLogs, and AzureNetworkAnalytics_CL\n"
-        "- Map activity to MITRE ATT&CK tactics, techniques, and sub-techniques when possible\n"
-        "- Provide detection confidence (High, Medium, Low) with concise justifications\n"
-        "- Highlight Indicators of Compromise (IOCs): IPs, domains, file hashes, account names, devices, commands, process chains, etc.\n"
-        "- Recommend defender actions: Investigate, Monitor, Escalate, or Ignore\n\n"
-
-        "Your tone should be:\n"
-        "- Concise and direct\n"
-        "- Evidence-based and specific\n"
-        "- Structured, using JSON or bullet lists if the user request requires it\n\n"
-
-        "Avoid the following:\n"
-        "- Hallucinating log data or findings not grounded in the input\n"
-        "- Vague summaries or generic advice\n"
-        "- Explaining basic cybersecurity concepts unless asked to\n\n"
-
-        "You are assisting skilled analysts, not end users. Stay focused on helping them detect, assess, and act on real threats using log evidence."
-    )}
-
 SYSTEM_PROMPT_TOOL_SELECTION = {
     "role": "system",
     "content": ("""
       You are part of a tools/function call.
-      Your purpose is to take natural, threat-hunt related human language from a human SOC Analyst
-      and figure out which tables to investigate as well as figure out what the request/concern is
-      about (user account related, device/host related, firewall/NSG related, etc.) You will also
-      need to be prepared to provide rationale for your assessment as well.
-                
-    If no timeframe is specified by the user, choose 4 days (96 hours). If a start time and end time is given by the user
-    make sure to specify the start_time and end_time input variables when creating the KQL query.
+      Your purpose is to take input from a human SOC Analyst and identify the start and end time, tablename, devicename, and accountname.
+      These inputs will be used for a KQL query. The account given is a compromised account that an attacker has gained access to.
                 
     TOOL USAGE CONTRACT (important)
     - You may call exactly one tool: query_log_analytics.
@@ -340,7 +338,7 @@ TOOLS = [
                 "- InitiatingProcessCommandLine: the full command-line string (including arguments) used to launch the process that initiated a given event.\n\n"
 
                 "Fields (array/list) to include for the selected table:\n"
-                "- DeviceProcessEvents Fields: TimeGenerated, AccountName, ActionType, DeviceName, InitiatingProcessCommandLine, ProcessCommandLine\n"
+                "- DeviceProcessEvents Fields: TimeGenerated, AccountName, ActionType, DeviceName, InitiatingProcessCommandLine, ProcessCommandLine, InitiatingProcessRemoteSessionDeviceName\n"
                 "- DeviceFileEvents Fields: TimeGenerated, ActionType, DeviceName, FileName, FolderPath, InitiatingProcessAccountName, SHA256\n"
                 "- DeviceLogonEvents Fields: TimeGenerated, AccountName, DeviceName, ActionType, RemoteIP, RemoteDeviceName\n"
                 "- AzureNetworkAnalytics_CL Fields: TimeGenerated, FlowType_s, SrcPublicIPs_s, DestIP_s, DestPort_d, VM_s, AllowedInFlows_d, AllowedOutFlows_d, DeniedInFlows_d, DeniedOutFlows_d\n"
@@ -376,6 +374,10 @@ TOOLS = [
                         "type": "string",
                         "description": "Aka the 'user', 'username', or anything similar. For example, the email address, UPN, username or SPN of the user who has performed the operation."
                     },
+                    "account_name": {
+                        "type": "string",
+                        "description": "Aka the 'user', 'username', or anything similar. For example, the email address, UPN, username or SPN of the user who has performed the operation."
+                    },
                     "time_range_hours": {
                         "type": "integer",
                         "description": "How far back to search (e.g., 24 for 1 day)"
@@ -387,6 +389,10 @@ TOOLS = [
                     "end_time": {
                         "type": "string",
                         "description": "A specific end time the user specifies in date format (e.g., 11-19-2025)"
+                    },
+                    "InitiatingProcessRemoteSessionDeviceName": {
+                      "type": "string",
+                      "description": "The remote device which the user sends commands from to the current device."
                     },
                     "fields": {
                         "type": "array",
@@ -419,6 +425,7 @@ TOOLS = [
                     "fields",
                     "caller",
                     "user_principal_name",
+                    "account_name",
                     "about_individual_user",
                     "about_individual_host",
                     "about_network_security_group",

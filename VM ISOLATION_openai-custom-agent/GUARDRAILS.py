@@ -2,8 +2,8 @@ from colorama import Fore, Style
 
 # TODO: Provide allowed fields later
 ALLOWED_TABLES = {
-    "DeviceProcessEvents": { "TimeGenerated", "AccountName", "ActionType", "DeviceName", "InitiatingProcessCommandLine", "ProcessCommandLine" },
-    "DeviceNetworkEvents": { "TimeGenerated", "ActionType", "DeviceName", "RemoteIP", "RemotePort" },
+    "DeviceProcessEvents": { "TimeGenerated", "AccountName", "ActionType", "DeviceName", "InitiatingProcessCommandLine", "ProcessCommandLine", "InitiatingProcessRemoteSessionDeviceName" },
+    "DeviceNetworkEvents": { "TimeGenerated", "ActionType", "DeviceName", "InitiatingProcessCommandLine", "RemoteIP", "RemotePort" },
     "DeviceLogonEvents": { "TimeGenerated", "AccountName", "DeviceName", "ActionType", "RemoteIP", "RemoteDeviceName" },
     "AlertInfo": {},  # No fields specified in tools
     "AlertEvidence": {},  # No fields specified in tools
