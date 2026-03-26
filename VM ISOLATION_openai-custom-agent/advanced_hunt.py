@@ -109,11 +109,11 @@ if not hunt_results:
 elapsed = time.time() - start_time
 
 # Notify the user of hunt anaylsis duration and findings
-print(f"{Fore.WHITE}Cognitive hunt complete. Took {elapsed:.2f} seconds and found {Fore.LIGHTRED_EX}{len(hunt_results['findings'])} {Fore.WHITE}potential threat(s)!\n")
+print(f"{Fore.WHITE}Cognitive hunt complete. Took {elapsed:.2f}!\n")
 
 # Pause before displaying the results
 input(f"Press {Fore.LIGHTGREEN_EX}[Enter]{Fore.WHITE} or {Fore.LIGHTGREEN_EX}[Return]{Fore.WHITE} to see results.")
 
 # Display the threat hunt analysis results.
-UTILITIES.display_threats(threat_list=hunt_results['findings'])
+UTILITIES.display_incident(incident=hunt_results)
 
